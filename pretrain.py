@@ -45,7 +45,7 @@ def pretrain(opt):
     E.to(device)
     G.to(device)
     
-    optimizer = torch.optim.Adam([E.parameters()]+[G.parameters()], lr=opt['lr'])
+    optimizer = torch.optim.Adam(list(E.parameters())+list(G.parameters()), lr=opt['lr'])
     best_val_loss = 1e6
     for epoch in range(opt['num_epochs']):
         print('Start epoch {}'.format(epoch+1))
