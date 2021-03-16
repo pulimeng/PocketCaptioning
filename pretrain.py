@@ -23,7 +23,7 @@ rdBase.DisableLog('rdApp.error')
 with open('./params.json') as f:
     opt = json.load(f)
 
-def pretrain(opt):    
+def pretrain(opt):
     """Trains the Generator RNN"""
       
     save_dir = 'run_' + time.strftime("%Y-%m-%d-%H_%M_%S", time.localtime())
@@ -42,10 +42,10 @@ def pretrain(opt):
 
     E = Extractor(depth=10)
     G = Generator(voc)
-    model = nn.Sequential(E,G)
-    model.to(device)
+    E.to(device)
+    G.to(device)
     
-    optimizer = torch.optim.Adam(model.parameters(), lr=opt['lr'])
+    optimizer = torch.optim.Adam([E.parameters()]+[G.parameters()], lr=opt['lr'])
     best_val_loss = 1e6
     for epoch in range(opt['num_epochs']):
         print('Start epoch {}'.format(epoch+1))
@@ -85,7 +85,8 @@ def pretrain(opt):
                     
                 if loss.data < best_val_loss:
                     best_val_loss = loss.data.detach()
-                    torch.save(model.state_dict(), osp.join(opt['save_dir'], save_dir, 'best_model.ckpt'))
+                    torch.save(E.state_dict(), osp.join(opt['save_dir'], save_dir, 'best_e_model.ckpt'))
+                    torch.save(G.state_dict(), osp.join(opt['save_dir'], save_dir, 'best_g_model.ckpt'))
                 tqdm.write('Epoch {:3d}   step {:3d}    loss: {:5.2f}    {:>4.1f}% valid SMILES'
                            .format(epoch, step, loss.data, 100 * valid / len(seqs)))
                 
