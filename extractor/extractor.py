@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from extractor.voxresnet import generate_model
+from extractor.genet import Net
 
 def cudait(x):
     if torch.cuda.is_available():
@@ -12,12 +12,15 @@ def cudait(x):
 
 class Extractor(nn.Module):
     
-    def __init__(self, depth=10, output_size=512):
+    def __init__(self, gnn_layers, input_dim, hidden_dim, output_dim,
+                 aggregator='softmax', learn=True, msg_norm=True, mlp_layers=2,
+                 jk_layer='max', process_step=2, dropout=0.0):
             
         super(Extractor, self).__init__()
-        self.cnn = generate_model(model_depth=10, n_classes=output_size)
+        self.net = Net(gnn_layers, input_dim, hidden_dim, output_dim,
+                       aggregator, learn, msg_norm, mlp_layers,
+                       jk_layer, process_step, dropout)
 
-    def forward(self, input_voxel):
-        x = self.cnn(input_voxel)
-        x = F.relu(x)
+    def forward(self, data):
+        x = self.net(data)
         return x
