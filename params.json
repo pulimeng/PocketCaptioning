@@ -1,0 +1,13 @@
+{
+	"data_folder": "/home/limeng/Desktop/MCGAN/data/graphsite_cleaned",
+	"voc_file": "./Voc",
+	"save_dir": "./results/",
+	"threshold": 4.5,
+	"gnn_layers": 3,
+	"input_dim": 10,
+	"hidden_dim": 512,
+	"output_dim": 512,
+	"batch_size": 32,
+	"lr": 1e-3,
+	"num_epochs": 15
+}
