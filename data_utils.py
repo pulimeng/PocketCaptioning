@@ -1,12 +1,7 @@
-import os.path as osp
 import re
 import numpy as np
-import pandas as pd
 from rdkit import Chem
 import sys
-import h5py
-import torch
-from torch.utils.data import Dataset
 
 
 class Vocabulary(object):
@@ -75,58 +70,6 @@ class Vocabulary(object):
 
     def __str__(self):
         return "Vocabulary containing {} tokens: {}".format(len(self), self.chars)
-
-class MolData(Dataset):
-    """Custom PyTorch Dataset that takes a file containing SMILES.
-
-        Args:
-                fname : path to a file containing \n separated SMILES.
-                voc   : a Vocabulary instance
-
-        Returns:
-                A custom PyTorch dataset for training the Prior.
-    """
-    def __init__(self, pfolder, sname, voc):
-        self.voc = voc
-        self.smiles = pd.read_csv(sname)
-        self.pfolder = pfolder
-
-    def __getitem__(self, i):
-        pro = self.smiles.iloc[i,0]
-        with h5py.File(osp.join(self.pfolder, pro+'.h5'), 'r') as f:
-            X = f['X'][()]
-            X = torch.FloatTensor(X)
-        mol = self.smiles.iloc[i,2]
-        label = self.smiles.iloc[i,3]
-        tokenized = self.voc.tokenize(mol)
-        encoded = self.voc.encode(tokenized)
-        data = {'x': X, 's':encoded, 'y':label}
-        return data
-
-    def __len__(self):
-        return len(self.smiles)
-
-    def __str__(self):
-        return "Dataset containing {} structures.".format(len(self))
-
-    @classmethod
-    def collate_fn(cls, data):
-        """Function to take a list of encoded sequences and turn them into a batch"""
-        voxel = [d['x'] for d in data]
-        collated_voxel = torch.zeros([len(voxel)] + [x for x in voxel[0].shape])
-        arr = [d['s'] for d in data]
-        ys = [d['y'] for d in data]
-        collated_label = torch.zeros(len(ys),1)
-        max_length = max([seq.size for seq in arr])
-        collated_arr = torch.zeros(len(arr), max_length)
-        i = 0
-        for vox, seq, y in zip(voxel, arr, ys):
-            collated_arr[i, :seq.size] = torch.from_numpy(seq)
-            collated_voxel[i, :] = vox
-            collated_label[i,:] = torch.FloatTensor([y])
-            i += 1
-        collated_data = {'x':collated_voxel, 's':collated_arr, 'y':collated_label}
-        return collated_data
     
 def replace_halogen(string):
     """Regex to replace Br and Cl with single letters"""
